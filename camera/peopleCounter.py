@@ -22,8 +22,8 @@ Made by: Jose Garcia
 
 URL_EDUCATIONAL = "http://things.ubidots.com"
 URL_INDUSTRIAL = "http://industrial.api.ubidots.com"
-INDUSTRIAL_USER = True  # Set this to False if you are an educational user
-TOKEN = "...."  # Put here your Ubidots TOKEN
+INDUSTRIAL_USER = False  # Set this to False if you are an educational user
+TOKEN = "BBFF-uODqtpqdmveQwzoPxiM5FIOdV6serU"  # Put here your Ubidots TOKEN
 DEVICE = "detector"  # Device where will be stored the result
 VARIABLE = "people"  # Variable where will be stored the result
 
@@ -93,6 +93,8 @@ def localDetect(image_path):
     image = cv2.imread(image_path)
     image = imutils.resize(image, width=min(400, image.shape[1]))
     clone = image.copy()
+    #iterator to count boxes
+    i=0
     if len(image) <= 0:
         print("[ERROR] could not read your local image")
         return result
@@ -102,6 +104,8 @@ def localDetect(image_path):
     # shows the result
     for (xA, yA, xB, yB) in result:
         cv2.rectangle(image, (xA, yA), (xB, yB), (0, 255, 0), 2)
+        i=i+1
+        print(i)
 
     cv2.imshow("result", image)
     cv2.waitKey(0)
@@ -157,7 +161,7 @@ def convert_to_base64(image):
     return b64.decode('utf-8')
 
 
-def detectPeople(args):
+def detectPeople(args): 
     image_path = args["image"]
     camera = True if str(args["camera"]) == 'true' else False
 
