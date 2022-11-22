@@ -70,7 +70,7 @@ def localDetect(image_path):
     for (xA, yA, xB, yB) in result:
         cv2.rectangle(image, (xA, yA), (xB, yB), (0, 255, 0), 2)
         i=i+1
-    print("[INFO] The search for people was successful. I was able to find ", i , "people") 
+    print("[INFO] The search for people was successful. I was able to find", i , "people") 
     print("[INFO] Press Q to exit") 
 
     cv2.imshow("result", image)
@@ -92,10 +92,14 @@ def cameraDetect():
         ret, frame = cap.read()
         frame = imutils.resize(frame, width=min(400, frame.shape[1]))
         result = detector(frame.copy())
-
+        j=0
         # shows the result
         for (xA, yA, xB, yB) in result:
             cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
+            j=j+1
+            #timer just in case we dont want the live data but rather a periodic check
+            #time.sleep(1)
+            print("[INFO] The search for people was successful. I was able to find", j , "people")
         cv2.imshow('frame', frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
