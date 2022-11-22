@@ -14,18 +14,7 @@ Usage:
 python peopleCounter.py -i PATH_TO_IMAGE  # Reads and detect people in a single local stored image
 python peopleCounter.py -c  # Attempts to detect people using webcam
 
-IMPORTANT: This example is given AS IT IS without any warranty
-
-Made by: Jose Garcia
-
 '''
-
-URL_EDUCATIONAL = "http://things.ubidots.com"
-URL_INDUSTRIAL = "http://industrial.api.ubidots.com"
-INDUSTRIAL_USER = False  # Set this to False if you are an educational user
-TOKEN = "BBFF-uODqtpqdmveQwzoPxiM5FIOdV6serU"  # Put here your Ubidots TOKEN
-DEVICE = "detector"  # Device where will be stored the result
-VARIABLE = "people"  # Variable where will be stored the result
 
 # Opencv pre-trained SVM with HOG people features 
 HOGCV = cv2.HOGDescriptor()
@@ -52,31 +41,7 @@ def detector(image):
 
     return result
 
-
-def buildPayload(variable, value, context):
-    return {variable: {"value": value, "context": context}}
-
-
-def sendToUbidots(token, device, variable, value, context={}, industrial=True):
-    # Builds the endpoint
-    url = URL_INDUSTRIAL if industrial else URL_EDUCATIONAL
-    url = "{}/api/v1.6/devices/{}".format(url, device)
-
-    payload = buildPayload(variable, value, context)
-    headers = {"X-Auth-Token": token, "Content-Type": "application/json"}
-
-    attempts = 0
-    status = 400
-
-    while status >= 400 and attempts <= 5:
-        req = requests.post(url=url, headers=headers, json=payload)
-        status = req.status_code
-        attempts += 1
-        time.sleep(1)
-
-    return req
-
-
+# Defining the parameters that I will recieve from the command prompt
 def argsParser():
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--image", default=None,
@@ -105,24 +70,22 @@ def localDetect(image_path):
     for (xA, yA, xB, yB) in result:
         cv2.rectangle(image, (xA, yA), (xB, yB), (0, 255, 0), 2)
         i=i+1
-        print(i)
+    print("[INFO] The search for people was successful. I was able to find ", i , "people") 
+    print("[INFO] Press Q to exit") 
 
     cv2.imshow("result", image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-    cv2.imwrite("result.png", np.hstack((clone, image)))
-    return (result, image)
+    #This will save the result in an image file that will have the before and after of the picture
+    #cv2.imwrite("result.png", np.hstack((clone, image)))
+    #return (result, image)
 
 
-def cameraDetect(token, device, variable, sample_time=5):
+def cameraDetect():
 
     cap = cv2.VideoCapture(0)
     init = time.time()
-
-    # Allowed sample time for Ubidots is 1 dot/second
-    if sample_time < 1:
-        sample_time = 1
 
     while(True):
         # Capture frame-by-frame
@@ -134,16 +97,6 @@ def cameraDetect(token, device, variable, sample_time=5):
         for (xA, yA, xB, yB) in result:
             cv2.rectangle(frame, (xA, yA), (xB, yB), (0, 255, 0), 2)
         cv2.imshow('frame', frame)
-
-        # Sends results
-        if time.time() - init >= sample_time:
-            print("[INFO] Sending actual frame results")
-            # Converts the image to base 64 and adds it to the context
-            b64 = convert_to_base64(frame)
-            context = {"image": b64}
-            sendToUbidots(token, device, variable,
-                          len(result), context=context)
-            init = time.time()
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -169,22 +122,15 @@ def detectPeople(args):
     if image_path != None and not camera:
         print("[INFO] Image path provided, attempting to read image")
         (result, image) = localDetect(image_path)
-        print("[INFO] sending results")
         # Converts the image to base 64 and adds it to the context
         b64 = convert_to_base64(image)
         context = {"image": b64}
 
-        # Sends the result
-        req = sendToUbidots(TOKEN, DEVICE, VARIABLE,
-                            len(result), context=context)
-        if req.status_code >= 400:
-            print("[ERROR] Could not send data to Ubidots")
-            return req
-
     # Routine to read images from webcam
     if camera:
         print("[INFO] reading camera images")
-        cameraDetect(TOKEN, DEVICE, VARIABLE)
+        cameraDetect()
+        print("[INFO] Press Q to exit")
 
 
 def main():
